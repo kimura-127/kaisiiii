@@ -72,7 +72,7 @@ export default function Home() {
             </h1>
           </div>
           <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            実写BL作品のビデオグラム流通量をECサイト別に調査し、ランキング表示するシステムです
+            実写BL（ボーイズラブ）映画・ドラマのDVD/Blu-rayの販売状況をECサイト別に調査し、流通量をランキング表示します
           </p>
         </motion.header>
 
@@ -139,7 +139,7 @@ export default function Home() {
               検索を開始してください
             </h3>
             <p className="text-slate-500 dark:text-slate-500">
-              実写BL作品名を入力して、ECサイトでの流通量を調査できます
+              実写BL映画・ドラマのタイトルを入力して、ECサイトでのDVD/Blu-ray販売状況を調査できます
             </p>
           </motion.div>
         )}

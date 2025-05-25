@@ -39,7 +39,7 @@ export function SearchForm({ onSearch, isLoading = false }: SearchFormProps) {
         <div className="relative flex-1">
           <Input
             type="text"
-            placeholder="実写BL作品名を入力してください..."
+            placeholder="実写BL作品のタイトル (例: 「映画名」「ドラマ名」)..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="pr-4"

@@ -21,8 +21,13 @@ export class TavilyClient {
           query,
           max_results: maxResults,
           search_depth: 'advanced',
-          include_domains: ['amazon.co.jp', 'rakuten.co.jp', 'yahoo.co.jp'],
-          exclude_domains: ['google.com', 'bing.com'],
+          include_domains: ['amazon.co.jp', 'rakuten.co.jp', 'yahoo.co.jp', 'tsutaya.co.jp', 'hmv.co.jp'],
+          exclude_domains: [
+            'google.com', 'bing.com', 
+            'cardshop.jp', 'tcg.jp', 'cardlab.jp', 'toretoku.jp',
+            'hareruya.com', 'bigmagic.net', 'fullahead.jp',
+            'pokemon.co.jp', 'yugioh-card.com'
+          ],
         }),
       });
 
@@ -39,8 +44,13 @@ export class TavilyClient {
   }
 
   async searchVGProducts(searchTerm: string): Promise<VGRankingData[]> {
-    const blTerms = ['BL', 'ボーイズラブ', 'Boys Love', '実写', 'DVD', 'Blu-ray', 'ビデオグラム'];
-    const fullQuery = `${searchTerm} ${blTerms.join(' OR ')} 実写BL DVD OR Blu-ray`;
+    const blTerms = ['BL', 'ボーイズラブ', 'Boys Love', '実写BL', 'DVD', 'Blu-ray', 'ビデオグラム', '映画', 'ドラマ'];
+    const excludeTerms = ['カード', 'TCG', 'トレーディング', 'カードゲーム', 'プレイマット', 'スリーブ', 'デッキ', 'ポケモン', '遊戯王', 'カードショップ'];
+    
+    // BL実写作品に特化したクエリを構築
+    const inclusiveQuery = `"${searchTerm}" AND (${blTerms.map(term => `"${term}"`).join(' OR ')})`;
+    const exclusiveQuery = excludeTerms.map(term => `-"${term}"`).join(' ');
+    const fullQuery = `${inclusiveQuery} ${exclusiveQuery}`;
 
     try {
       const results = await this.search(fullQuery, 30);
@@ -86,6 +96,11 @@ export class TavilyClient {
       if (hostname.includes('rakuten')) return '楽天市場';
       if (hostname.includes('yahoo')) return 'Yahoo!ショッピング';
       if (hostname.includes('mercari')) return 'メルカリ';
+      if (hostname.includes('tsutaya')) return 'TSUTAYA';
+      if (hostname.includes('hmv')) return 'HMV&BOOKS';
+      if (hostname.includes('7net')) return 'セブンネット';
+      if (hostname.includes('yodobashi')) return 'ヨドバシ';
+      if (hostname.includes('biccamera')) return 'ビックカメラ';
       
       // Extract domain name for other sites
       const parts = hostname.split('.');
@@ -97,6 +112,24 @@ export class TavilyClient {
 
   private parseProductFromResult(result: any): VGProduct | null {
     try {
+      // カード関連の商品を除外
+      const cardKeywords = ['カード', 'TCG', 'トレーディング', 'カードゲーム', 'プレイマット', 'スリーブ', 'デッキ', 'ポケモン', '遊戯王'];
+      const titleAndContent = (result.title + ' ' + result.content).toLowerCase();
+      
+      for (const keyword of cardKeywords) {
+        if (titleAndContent.includes(keyword.toLowerCase())) {
+          return null; // カード関連商品は除外
+        }
+      }
+
+      // BL/実写関連のキーワードが含まれているかチェック
+      const blKeywords = ['bl', 'ボーイズラブ', 'boys love', '実写', 'dvd', 'blu-ray', 'ビデオグラム', '映画', 'ドラマ'];
+      const hasBLKeyword = blKeywords.some(keyword => titleAndContent.includes(keyword.toLowerCase()));
+      
+      if (!hasBLKeyword) {
+        return null; // BL関連でない商品は除外
+      }
+
       // Extract price from content (simplified parsing)
       const priceMatch = result.content.match(/[¥￥]?([0-9,]+)円?/);
       const price = priceMatch ? parseInt(priceMatch[1].replace(/,/g, '')) : 0;
